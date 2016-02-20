@@ -4,8 +4,6 @@
 #include <iomanip>
 #include <windows.h>
 
-#define LOG(msg) std::cout << mgs << std::endl;
-
 class App
 {
 public:
