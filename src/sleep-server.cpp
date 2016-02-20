@@ -21,14 +21,14 @@ public:
 
     void run()
     {
-        auto connection = mg_bind(&mgr, address.c_str(), handler);
+        auto connection = mg_bind(&mgr, address.c_str(), handle);
         mg_set_protocol_http_websocket(connection);
         while (true)
             mg_mgr_poll(&mgr, 1000);
     }
 
 private:
-    static void handler(struct mg_connection *connection, int event, void *p)
+    static void handle(struct mg_connection *connection, int event, void *p)
     {
         if (event != MG_EV_HTTP_REQUEST)
             return;
