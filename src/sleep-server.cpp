@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <windows.h>
 
 #define LOG(msg) std::cout << mgs << std::endl;
 
@@ -11,19 +12,22 @@ public:
     App(int port)
     {
         mg_mgr_init(&mgr, nullptr);
+        mgr.user_data = this;
         address = std::to_string(port);
     }
 
     ~App()
     {
         mg_mgr_free(&mgr);
+        remove_from_tray();
     }
 
     void run()
     {
         auto connection = mg_bind(&mgr, address.c_str(), handle);
         mg_set_protocol_http_websocket(connection);
-        while (true)
+        hide_to_tray();
+        while (!stop)
             mg_mgr_poll(&mgr, 1000);
     }
 
@@ -36,10 +40,17 @@ private:
         auto uri = get_request_uri(p);
         log(uri);
 
+        auto wnd_handle = GetConsoleWindow();
+        
         if (uri == "/sleep")
         {
             write_response(connection, "200 OK");
             sleep_machine();
+        }
+        else if (uri == "/stop")
+        {
+            write_response(connection, "200 OK");
+            static_cast<App*>(connection->mgr->user_data)->stop = true;
         }
         else
             write_response(connection, "501 Not Implemented");
@@ -70,8 +81,31 @@ private:
         system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0");
     }
 
+    void hide_to_tray()
+    {
+        auto window = GetConsoleWindow();
+
+        tray_icon.cbSize = sizeof(tray_icon);
+        tray_icon.hIcon = LoadIcon(nullptr, IDI_WINLOGO);
+        tray_icon.hWnd = window;
+        strcpy(tray_icon.szTip, "Sleep server");
+        tray_icon.uCallbackMessage = WM_LBUTTONDOWN;
+        tray_icon.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+        tray_icon.uID = 1;
+        Shell_NotifyIconA(NIM_ADD, &tray_icon);
+
+        ShowWindow(window, SW_HIDE);
+    }
+
+    void remove_from_tray()
+    {
+        Shell_NotifyIconA(NIM_DELETE, &tray_icon);
+    }
+
+    NOTIFYICONDATAA tray_icon;
     std::string address;
     mg_mgr mgr;
+    bool stop = false;
 };
 
 int main()
