@@ -44,6 +44,11 @@ private:
             writeResponse(connection, "200 OK");
             sleepMachine();
         }
+        else if (uri == "/shutdown")
+        {
+            writeResponse(connection, "200 OK");
+            shutdownMachine();
+        }
         else if (uri == "/stop")
         {
             writeResponse(connection, "200 OK");
@@ -73,13 +78,13 @@ private:
         std::cout << std::put_time(localTime, "%c") << "  " << msg << std::endl;
     }
 
-    static void sleepMachine()
+    static bool requestShutdownPrivilege()
     {
         HANDLE token;
         if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
         {
             log("Failed to open process token");
-            return;
+            return false;
         }
 
         TOKEN_PRIVILEGES priv;
@@ -90,9 +95,27 @@ private:
 
         if (!AdjustTokenPrivileges(token, false, &priv, 0, nullptr, nullptr))
         {
-            log("Failed to adjust token privileges");
-            return;
+            log("Failed to adjust privilege");
+            return false;
         }
+
+        return true;
+    }
+
+    static void shutdownMachine()
+    {
+        if (!requestShutdownPrivilege())
+            return;
+
+        if (!ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCEIFHUNG,
+            SHTDN_REASON_MAJOR_OPERATINGSYSTEM | SHTDN_REASON_MINOR_UPGRADE | SHTDN_REASON_FLAG_PLANNED))
+            log("Failed to shutdown PC");
+    }
+
+    static void sleepMachine()
+    {
+        if (!requestShutdownPrivilege())
+            return;
 
         if (!SetSystemPowerState(false, true))
             log("Failed to put PC to sleep");
