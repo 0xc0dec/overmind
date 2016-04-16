@@ -75,7 +75,27 @@ private:
 
     static void sleepMachine()
     {
-        system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0");
+        HANDLE token;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+        {
+            log("Failed to open process token");
+            return;
+        }
+
+        TOKEN_PRIVILEGES priv;
+        LookupPrivilegeValue(nullptr, SE_SHUTDOWN_NAME, &priv.Privileges[0].Luid);
+
+        priv.PrivilegeCount = 1;
+        priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (!AdjustTokenPrivileges(token, false, &priv, 0, nullptr, nullptr))
+        {
+            log("Failed to adjust token privileges");
+            return;
+        }
+
+        if (!SetSystemPowerState(false, true))
+            log("Failed to put PC to sleep");
     }
 
     void hideToTray()
