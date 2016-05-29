@@ -61,6 +61,7 @@ fn main() {
         match req.url.path[0].as_ref() {
             "sleep" => sleep_machine(),
             "shutdown" => shutdown_machine(),
+            "stop" => std::process::exit(0),
             _ => ()
         };
         Ok(Response::with((status::Ok, "")))
