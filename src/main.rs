@@ -18,12 +18,12 @@ fn request_privileges() {
     let mut token = std::ptr::null_mut();
     unsafe {
         if advapi32::OpenProcessToken(process, winapi::winnt::TOKEN_ADJUST_PRIVILEGES | winapi::winnt::TOKEN_QUERY, &mut token) == 0 {
-            println!("Failed to obtain process token");
+            panic!("Failed to obtain process token");
         }
 
         let mut luid: winapi::winnt::LUID = std::mem::zeroed();
         if advapi32::LookupPrivilegeValueA(std::ptr::null_mut(), "SeShutdownPrivilege".as_ptr() as *mut _, &mut luid) == 0 {
-            println!("Failed to find privilege");
+            panic!("Failed to find privilege");
         }
 
         let mut privileges: TokenPrivileges = std::mem::zeroed();
@@ -31,7 +31,7 @@ fn request_privileges() {
         privileges.privileges[0].Attributes = winapi::winnt::SE_PRIVILEGE_ENABLED;
         privileges.privileges[0].Luid = luid;
         if advapi32::AdjustTokenPrivileges(token, 0, std::mem::transmute(&privileges), 0, std::ptr::null_mut(), std::ptr::null_mut()) == 0 {
-            println!("Failed to adjust token privileges");
+            panic!("Failed to adjust token privileges");
         }
     }
 }
