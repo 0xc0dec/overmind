@@ -1,0 +1,15 @@
+<html>
+
+<head>
+    <script type="text/javascript">
+        function sleep() {
+            fetch("/sleep").then(() => console.log('Finished'));
+        }
+    </script>
+</head>
+
+<body>
+    <button onclick="sleep()">Sleep</button>
+</body>
+
+</html>
