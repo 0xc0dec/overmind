@@ -30,5 +30,5 @@ class Handler(BaseHTTPRequestHandler):
 class Server(ThreadingMixIn, HTTPServer):
     "Empty"
 
-server = Server(('0.0.0.0', 13666), Handler)
+server = Server(('0.0.0.0', 13456), Handler)
 server.serve_forever()
