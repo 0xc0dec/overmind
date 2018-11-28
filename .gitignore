@@ -17,8 +17,6 @@
 *VC.opendb
 
 build/**
-!build/Debug/
-build/Debug/*
 !build/Release/
 build/Release/*
 !build/**/ovm.exe
